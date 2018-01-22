@@ -36,28 +36,44 @@ from sklearn.cluster import DBSCAN
 # ヒストグラムを生成
 def makefeaturehistpair():
     
+    # 外れ値
+    df_wine.plot(kind='hist', bins=50, subplots=True)
+    
     # 散布図を作成
     sns.pairplot(df_wine, hue = "quality", diag_kind="kde")
+    (df_wine.sort_values('fixed acidity').
+     plot.barh(subplots=True, layout=(3, 4), sharex=False, legend=False))
     plt.show()
+    
 
 # 箱ひげ図を生成
-#def makeboxplot():
+def makeboxplot():
+    fig, axes = plt.subplots(figsize=(10,10))
+    
+    for i, (n, g) in enumerate(df_wine.groupby('quality')):
+        sns.boxplot(data=g.iloc[:, 0:-1], ax=axes[i])
+        axes[i].set_ylabel(n)
+    
 #    ax = sns.boxplot(111)
 #    ax.boxplot(wine_dataframe)
 
-# 
-
+ 
 # 外れ値を検出
 def getnoise():
-    
+
     # 外れ値検出の精度向上のため、テストデータのスケーリングを行う
     scaler = MinMaxScaler()
     scaler.fit(X)
     X_scaled = scaler.transform(X)
     
-    dbscan = DBSCAN(min_samples=5, eps=0.4)
-    labels = dbscan.fit_predict(X_scaled)
-    print ("noise: {}".format(np.bincount(labels + 1)))
+    # 外れ値を視覚
+    for eps in [0.2, 0.4, 0.6, 0.8]:
+        
+        print ("\neps={}".format(eps))
+        dbscan = DBSCAN(min_samples=3, eps=eps)
+        labels = dbscan.fit_predict(X_scaled)
+        print ("Clusters present: {}".format(np.unique(labels)))
+        print ("Clusters sizes: {}".format(np.bincount(labels + 1)))
     
 # マトリックスを生成
 #def getfeturematrix():
@@ -106,7 +122,7 @@ getnoise()
 makefeaturehistpair()
 
 # 箱ひげ図生成関数の呼び出し
-#makeboxplot()
+makeboxplot()
 
 # マトリックス生成関数の呼び出し
 #getfeturematrix()
